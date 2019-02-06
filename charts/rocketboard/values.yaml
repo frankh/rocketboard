@@ -1,0 +1,87 @@
+replicaCount: 1
+
+image:
+  repository: arachnysdocker/rocketboard
+  tag: stable
+  pullPolicy: IfNotPresent
+
+include-qa-annotations: true
+
+nats:
+  replicaCount: 1
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+  auth:
+    enabled: false
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 512Mi
+
+ingress:
+  enabled: true
+  path: /
+  annotations:
+    nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+    nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$request_uri"
+  hosts:
+    - rocketboard.arachnys.com
+  tls:
+    - secretName: arachnys-wildcard-tls
+      hosts:
+        - rocketboard.arachnys.com
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 0
+    maxUnavailable: 1
+
+cockroachdb:
+  enabled: false
+  ImageTag: v2.1.0
+  Replicas: 3
+  Storage: 10Gi
+  Resources:
+    requests:
+      cpu: "100m"
+      memory: "512Mi"
+
+oauth2-proxy:
+  replicaCount: 1
+
+  service:
+    port: 4180
+
+  ingress:
+    enabled: true
+    path: /oauth2
+    hosts:
+      - rocketboard.arachnys.com
+    tls:
+      - secretName: arachnys-wildcard-tls
+        hosts:
+          - rocketboard.arachnys.com
+
+  config:
+    clientID: ""
+    clientSecret: ""
+    cookieSecret: ""
+
+  extraArgs:
+    oidc-issuer-url: "https://oauth.k8s-dev.arachnys.com"
+    provider: "oidc"
+    upstream: "http://rocketboard"
+    http-address: "0.0.0.0:4180"
+

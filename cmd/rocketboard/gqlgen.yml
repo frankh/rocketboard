@@ -1,0 +1,20 @@
+schema: graph/schema.graphql
+exec:
+  filename: graph/generated.go
+model:
+  filename: graph/models_gen.go
+models:
+  Retrospective:
+    model: github.com/arachnys/rocketboard/cmd/rocketboard/model.Retrospective
+  Card:
+    model: github.com/arachnys/rocketboard/cmd/rocketboard/model.Card
+  Vote:
+    model: github.com/arachnys/rocketboard/cmd/rocketboard/model.Vote
+  Status:
+    model: github.com/arachnys/rocketboard/cmd/rocketboard/model.Status
+  StatusType:
+    model: github.com/arachnys/rocketboard/cmd/rocketboard/model.StatusType
+  UserStateType:
+    model: github.com/arachnys/rocketboard/cmd/rocketboard/model.UserStateType
+  UserState:
+    model: github.com/arachnys/rocketboard/cmd/rocketboard/model.UserState

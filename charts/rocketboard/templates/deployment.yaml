@@ -1,0 +1,81 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ template "rocketboard.fullname" . }}
+  labels:
+    app: {{ template "rocketboard.name" . }}
+    chart: {{ template "rocketboard.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "rocketboard.name" . }}
+      release: {{ .Release.Name }}
+  strategy:
+{{ toYaml .Values.strategy | indent 4 }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "rocketboard.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      imagePullSecrets:
+        - name: arachnys-docker
+{{- if index .Values.cockroachdb.enabled }}
+      initContainers:
+        - name: {{ .Chart.Name }}-initdb
+          image: "postgres:10-alpine"
+          command:
+          - bash
+          - -c
+          args:
+          - |
+            psql "$ROCKET_DATABASE_ROOT_URI" -c "CREATE DATABASE rocket" || echo "Ignoring Error"
+            psql "$ROCKET_DATABASE_URI" -c "select 1"
+          env:
+            - name: ROCKET_DATABASE_ROOT_URI
+              value: postgres://root@{{ template "rocketboard.fullname" . }}-cockroachdb-public:26257/?sslmode=disable
+            - name: ROCKET_DATABASE_URI
+              value: postgres://root@{{ template "rocketboard.fullname" . }}-cockroachdb-public:26257/rocket?sslmode=disable
+            - name: PGCONNECT_TIMEOUT
+              value: "3"
+{{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+{{- if index .Values.cockroachdb.enabled }}
+            - name: ROCKET_DATABASE_URI
+              value: postgres://root@{{ template "rocketboard.fullname" . }}-cockroachdb-public:26257/rocket?sslmode=disable
+{{- end }}
+            - name: NATS_ADDR
+              value: nats://{{ template "rocketboard.fullname" . }}-nats-client:4222
+          ports:
+            - name: http
+              containerPort: 5000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: http
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

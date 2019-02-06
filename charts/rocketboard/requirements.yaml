@@ -1,0 +1,10 @@
+dependencies:
+  - name: oauth2-proxy
+    version: 0.8.0
+    repository: https://kubernetes-charts.storage.googleapis.com/
+  - name: cockroachdb
+    version: 2.0.2
+    repository: https://kubernetes-charts.storage.googleapis.com/
+  - name: nats
+    version: 1.1.2
+    repository: "https://kubernetes-charts.storage.googleapis.com/"

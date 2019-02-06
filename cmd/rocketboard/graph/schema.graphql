@@ -1,0 +1,86 @@
+schema {
+    query: RootQuery
+    mutation: RootMutation
+}
+
+type RootQuery {
+    retrospectiveById(id: ID!): Retrospective
+    retrospectiveByPetName(petName: String!): Retrospective
+}
+
+type RootMutation {
+    startRetrospective(name: String): String!
+    addCardToRetrospective(id: ID!, column: String, message: String): String!
+    moveCard(id: ID!, column: String!, index: Int!): Int!
+    updateMessage(id: ID!, message: String!): String!
+    newVote(cardId: ID!, emoji: String!): Vote!
+    updateStatus(id: ID!, status: StatusType!): Status!
+    sendHeartbeat(rId: ID!, state: String!): String!
+}
+
+type Subscription {
+  cardChanged(rId: String!): Card!
+  retroChanged(rId: String!): Retrospective!
+}
+
+enum StatusType {
+    InProgress
+    Discussed
+    Archived
+}
+
+enum UserStateType {
+    Unknown
+    Hidden
+    Visible
+}
+
+type UserState {
+    user: String
+    state: UserStateType
+}
+
+type Retrospective {
+    id: ID!
+    created: Time
+    updated: Time
+    name: String
+    petName: String
+
+    cards: [Card]
+
+    onlineUsers: [UserState!]
+}
+
+type Card {
+    id: ID!
+    created: Time
+    updated: Time
+    message: String
+    creator: String
+    column: String
+
+    statuses: [Status]
+    votes: [Vote]
+
+    position: Int
+}
+
+type Vote {
+    id: ID!
+    created: Time
+    updated: Time
+    cardId: String
+    voter: String
+    emoji: String
+    count: Int
+}
+
+type Status {
+    id: ID!
+    created: Time
+    cardId: String
+    type: StatusType
+}
+
+scalar Time
